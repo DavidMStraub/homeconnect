@@ -12,6 +12,8 @@ ENDPOINT_AUTHORIZE = '/security/oauth/authorize'
 ENDPOINT_TOKEN = '/security/oauth/token'
 ENDPOINT_APPLIANCES = '/api/homeappliances'
 
+class HomeConnectError(Exception):
+    pass
 
 class HomeConnect:
     """Connection to the HomeConnect OAuth API."""
@@ -97,9 +99,14 @@ class HomeConnect:
         uri = self.get_uri(endpoint)
         res = self.oauth.get(uri)
         try:
-            return res.json()
+            res = res.json()
         except:
-            return None
+            raise ValueError("Cannot parse {} as JSON".format(res))
+        if 'error' in res:
+            raise HomeConnectError(res['error'])
+        elif 'data' not in res:
+            raise HomeConnectError("Unexpected error")
+        return res['data']
 
     def put(self, endpoint, data):
         """Send (PUT) data to an endpoint."""
@@ -111,7 +118,7 @@ class HomeConnect:
         appliances."""
         data = self.get(ENDPOINT_APPLIANCES)
         return [HomeConnectAppliance(self, **app)
-                for app in data['data']['homeappliances']]
+                for app in data['homeappliances']]
 
 
 class HomeConnectAppliance:
@@ -199,7 +206,7 @@ class HomeConnectAppliance:
         status = self.get('/status')
         if not status or 'data' not in status:
             return {}
-        self.status = self.json2dict(status['data']['status'])
+        self.status = self.json2dict(status['status'])
         return self.status
 
     def get_settings(self):
