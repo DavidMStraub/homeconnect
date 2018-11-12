@@ -1,7 +1,6 @@
 from requests_oauthlib import OAuth2Session
 from sseclient import SSEClient
 from threading import Thread
-import simplejson
 import json
 import os
 import time
@@ -47,8 +46,6 @@ class HomeConnect:
             return None
         with open(self.token_cache, 'r') as f:
             token = json.load(f)
-        if self.token_expired(token):
-            return None
         return token
 
     def token_expired(self, token):
