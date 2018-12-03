@@ -1,5 +1,5 @@
 from requests_oauthlib import OAuth2Session
-from sseclient import SSEClient
+from .sseclient import SSEClient
 from threading import Thread
 import json
 import os
@@ -48,6 +48,8 @@ class HomeConnect:
             return None
         with open(self.token_cache, 'r') as f:
             token = json.load(f)
+        now = int(time.time())
+        token['expires_in'] = token.get('expires_at', now - 1) - now
         return token
 
     def token_expired(self, token):
@@ -62,7 +64,6 @@ class HomeConnect:
         refresh_kwargs = {
             'client_id': self.client_id,
             'client_secret': self.client_secret,
-            'grant_type': 'refresh_token',
         }
         refresh_url = self.get_uri(ENDPOINT_TOKEN)
         token = self.token_load()
@@ -111,7 +112,22 @@ class HomeConnect:
     def put(self, endpoint, data):
         """Send (PUT) data to an endpoint."""
         uri = self.get_uri(endpoint)
-        return self.oauth.put(uri, data)
+        res = self.oauth.put(
+            uri,
+            json.dumps(data),
+            headers={'Content-Type': 'application/vnd.bsh.sdk.v1+json'})
+        if 'error' in res:
+            raise HomeConnectError(res['error'])
+        return res
+
+    def delete(self, endpoint):
+        """Delete an endpoint."""
+        uri = self.get_uri(endpoint)
+        res = self.oauth.delete(uri)
+        res = res.json()
+        if 'error' in res:
+            raise HomeConnectError(res['error'])
+        return res
 
     def get_appliances(self):
         """Return a list of `HomeConnectAppliance` instances for all
@@ -144,18 +160,23 @@ class HomeConnectAppliance:
         uri = self.hc.get_uri('{}/{}{}'.format('/api/homeappliances', self.haId, '/events'))
         from requests.exceptions import HTTPError
         sse = None
-        try:
-            sse = SSEClient(uri, session=self.hc.oauth)
-        except HTTPError:
-            time.sleep(1)
-            # try again once
-            sse = SSEClient(uri, session=self.hc.oauth)
+        while True:
+            try:
+                sse = SSEClient(uri, session=self.hc.oauth, retry=100)
+            except HTTPError:
+                print('HTTPError while trying to listen')
+                time.sleep(0.1)
+                continue
+            break
         Thread(target=self._listen, args=(sse, callback)).start()
 
     def _listen(self, sse, callback=None):
         """Worker function for listener."""
         for event in sse:
-            self.handle_event(event, callback)
+            try:
+                self.handle_event(event, callback)
+            except ValueError:
+                pass
 
     @staticmethod
     def json2dict(lst):
@@ -177,6 +198,10 @@ class HomeConnectAppliance:
         """Get data (as dictionary) from an endpoint."""
         return self.hc.get('{}/{}{}'.format(ENDPOINT_APPLIANCES, self.haId, endpoint))
 
+    def delete(self, endpoint):
+        """Delete endpoint."""
+        return self.hc.delete('{}/{}{}'.format(ENDPOINT_APPLIANCES, self.haId, endpoint))
+
     def put(self, endpoint, data):
         """Send (PUT) data to an endpoint."""
         return self.hc.put('{}/{}{}'.format(ENDPOINT_APPLIANCES, self.haId, endpoint), data)
@@ -191,11 +216,18 @@ class HomeConnectAppliance:
 
     def get_programs_available(self):
         """Get available programs."""
-        return self.get('/programs/available')
+        programs = self.get('/programs/available')
+        if not programs or 'programs' not in programs:
+            return []
+        return [p['key'] for p in programs['programs']]
 
-    def start_program(self, data):
+    def start_program(self, program):
         """Start a program."""
-        return self.put('/programs/active', data)
+        return self.put('/programs/active', {'data': {'key': program}})
+
+    def stop_program(self):
+        """Stop a program."""
+        return self.delete('/programs/active')
 
     def select_program(self, data):
         """Select a program."""
@@ -204,15 +236,19 @@ class HomeConnectAppliance:
     def get_status(self):
         """Get the status (as dictionary) and update `self.status`."""
         status = self.get('/status')
-        if not status or 'data' not in status:
+        if not status or 'status' not in status:
             return {}
         self.status = self.json2dict(status['status'])
         return self.status
 
     def get_settings(self):
         """Get the current settings."""
-        return self.get('/settings')
+        settings = self.get('/settings')
+        if not settings or 'settings' not in settings:
+            return {}
+        self.status.update(self.json2dict(settings['settings']))
+        return self.status
 
-    def set_settins(self, settingkey, data):
+    def set_setting(self, settingkey, value):
         """Change the current setting of `settingkey`."""
-        return self.put('/settings/{}'.format(settingkey), data)
+        return self.put('/settings/{}'.format(settingkey), {'data': {'key': value}})
