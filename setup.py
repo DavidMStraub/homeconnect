@@ -14,7 +14,7 @@ setup(name='homeconnect',
       long_description_content_type='text/markdown',
       license='MIT',
       packages=find_packages(),
-      install_requires=['requests', 'requests_oauthlib', 'sseclient'],
+      install_requires=['requests', 'requests_oauthlib'],
       extras_require={
             'testing': ['nose',],
       },
