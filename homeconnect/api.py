@@ -115,7 +115,14 @@ class HomeConnect:
         res = self.oauth.put(
             uri,
             json.dumps(data),
-            headers={'Content-Type': 'application/vnd.bsh.sdk.v1+json'})
+            headers={
+            'Content-Type': 'application/vnd.bsh.sdk.v1+json',
+            'accept': 'application/vnd.bsh.sdk.v1+json'
+            })
+        try:
+            res = res.json()
+        except:
+            raise ValueError("Cannot parse {} as JSON".format(res))
         if 'error' in res:
             raise HomeConnectError(res['error'])
         return res
@@ -251,4 +258,4 @@ class HomeConnectAppliance:
 
     def set_setting(self, settingkey, value):
         """Change the current setting of `settingkey`."""
-        return self.put('/settings/{}'.format(settingkey), {'data': {'key': value}})
+        return self.put('/settings/{}'.format(settingkey), {'data': {'key': settingkey, 'value': value}})
