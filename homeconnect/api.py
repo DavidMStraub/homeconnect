@@ -99,6 +99,8 @@ class HomeConnect:
         """Get data as dictionary from an endpoint."""
         uri = self.get_uri(endpoint)
         res = self.oauth.get(uri)
+        if not res.content:
+            return {}
         try:
             res = res.json()
         except:
@@ -119,6 +121,8 @@ class HomeConnect:
             'Content-Type': 'application/vnd.bsh.sdk.v1+json',
             'accept': 'application/vnd.bsh.sdk.v1+json'
             })
+        if not res.content:
+            return {}
         try:
             res = res.json()
         except:
