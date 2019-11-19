@@ -11,7 +11,6 @@ from requests_oauthlib import OAuth2Session
 from .sseclient import SSEClient
 
 URL_API = "https://api.home-connect.com"
-URL_SIM = "https://simulator.home-connect.com"
 ENDPOINT_AUTHORIZE = "/security/oauth/authorize"
 ENDPOINT_TOKEN = "/security/oauth/token"
 ENDPOINT_APPLIANCES = "/api/homeappliances"
@@ -21,32 +20,124 @@ class HomeConnectError(Exception):
     pass
 
 
-class HomeConnect:
-    """Connection to the HomeConnect OAuth API."""
-
+class HomeConnectAPI:
     def __init__(
         self,
-        client_id,
-        client_secret="",
-        redirect_uri="",
-        simulate=False,
-        token_cache=None,
+        token: Optional[Dict[str, str]] = None,
+        client_id: str = None,
+        client_secret: str = None,
+        redirect_uri: str = None,
+        token_updater: Optional[Callable[[str], None]] = None,
     ):
-        """Initialize the connection."""
+        self.host = URL_API
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
-        self.simulate = simulate
-        self.oauth = None
-        self.token_cache = token_cache or "homeconnect_oauth_token.json"
-        self.connect()
+        self.token_updater = token_updater
 
-    def get_uri(self, endpoint):
-        """Get the full URL for a specific endpoint."""
-        if self.simulate:
-            return URL_SIM + endpoint
-        else:
-            return URL_API + endpoint
+        extra = {"client_id": self.client_id, "client_secret": self.client_secret}
+
+        self._oauth = OAuth2Session(
+            client_id=client_id,
+            redirect_uri=redirect_uri,
+            auto_refresh_kwargs=extra,
+            token=token,
+            token_updater=token_updater,
+        )
+
+    def refresh_tokens(self) -> Dict[str, Union[str, int]]:
+        """Refresh and return new tokens."""
+        token = self._oauth.refresh_token(f"{self.host}{ENDPOINT_TOKEN}")
+
+        if self.token_updater is not None:
+            self.token_updater(token)
+
+        return token
+
+    def request(self, method: str, path: str, **kwargs) -> Response:
+        """Make a request.
+
+        We don't use the built-in token refresh mechanism of OAuth2 session because
+        we want to allow overriding the token refresh logic.
+        """
+        url = f"{self.host}/{path}"
+        try:
+            return getattr(self._oauth, method)(url, **kwargs)
+        except TokenExpiredError:
+            self._oauth.token = self.refresh_tokens()
+
+            return getattr(self._oauth, method)(url, **kwargs)
+
+    def get(self, endpoint):
+        """Get data as dictionary from an endpoint."""
+        res = self.request("get", endpoint)
+        if not res.content:
+            return {}
+        try:
+            res = res.json()
+        except:
+            raise ValueError("Cannot parse {} as JSON".format(res))
+        if "error" in res:
+            raise HomeConnectError(res["error"])
+        elif "data" not in res:
+            raise HomeConnectError("Unexpected error")
+        return res["data"]
+
+    def put(self, endpoint, data):
+        """Send (PUT) data to an endpoint."""
+        res = self.request(
+            "put",
+            endpoint,
+            data=json.dumps(data),
+            headers={
+                "Content-Type": "application/vnd.bsh.sdk.v1+json",
+                "accept": "application/vnd.bsh.sdk.v1+json",
+            },
+        )
+        if not res.content:
+            return {}
+        try:
+            res = res.json()
+        except:
+            raise ValueError("Cannot parse {} as JSON".format(res))
+        if "error" in res:
+            raise HomeConnectError(res["error"])
+        return res
+
+    def delete(self, endpoint):
+        """Delete an endpoint."""
+        res = self.request("delete", endpoint)
+        if not res.content:
+            return {}
+        try:
+            res = res.json()
+        except:
+            raise ValueError("Cannot parse {} as JSON".format(res))
+        if "error" in res:
+            raise HomeConnectError(res["error"])
+        return res
+
+    def get_appliances(self):
+        """Return a list of `HomeConnectAppliance` instances for all
+        appliances."""
+        data = self.get(ENDPOINT_APPLIANCES)
+        return [HomeConnectAppliance(self, **app) for app in data["homeappliances"]]
+
+    def get_authurl(self):
+        """Get the URL needed for the authorization code grant flow."""
+        authorization_url, state = self._oauth.authorization_url(
+            f"{self.host}/{ENDPOINT_AUTHORIZE}"
+        )
+        return authorization_url
+
+
+class HomeConnect(HomeConnectAPI):
+    """Connection to the HomeConnect OAuth API."""
+
+    def __init__(self, client_id, client_secret="", redirect_uri="", token_cache=None):
+        """Initialize the connection."""
+        self.token_cache = token_cache or "homeconnect_oauth_token.json"
+        super().__init__(None, client_id, client_secret, redirect_uri, self.token_dump)
 
     def token_dump(self, token):
         """Dump the token to a JSON file."""
@@ -69,106 +160,15 @@ class HomeConnect:
         now = int(time.time())
         return token["expires_at"] - now < 60
 
-    def connect(self):
-        """Connect to the OAuth APIself.
-
-        Called at instantiation."""
-        refresh_kwargs = {
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-        }
-        refresh_url = self.get_uri(ENDPOINT_TOKEN)
-        token = self.token_load()
-        if token:
-            self.oauth = OAuth2Session(
-                self.client_id,
-                token=token,
-                auto_refresh_url=refresh_url,
-                auto_refresh_kwargs=refresh_kwargs,
-                token_updater=self.token_dump,
-            )
-        else:
-            self.oauth = OAuth2Session(
-                self.client_id,
-                redirect_uri=self.redirect_uri,
-                auto_refresh_url=refresh_url,
-                auto_refresh_kwargs=refresh_kwargs,
-                token_updater=self.token_dump,
-            )
-
-    def get_authurl(self):
-        """Get the URL needed for the authorization code grant flow."""
-        uri = self.get_uri(ENDPOINT_AUTHORIZE)
-        authorization_url, state = self.oauth.authorization_url(uri)
-        return authorization_url
-
     def get_token(self, authorization_response):
         """Get the token given the redirect URL obtained from the
         authorization."""
-        uri = self.get_uri(ENDPOINT_TOKEN)
-        token = self.oauth.fetch_token(
-            uri,
+        token = self._oauth.fetch_token(
+            f"{self.host}/{ENDPOINT_TOKEN}",
             authorization_response=authorization_response,
             client_secret=self.client_secret,
         )
         self.token_dump(token)
-
-    def get(self, endpoint):
-        """Get data as dictionary from an endpoint."""
-        uri = self.get_uri(endpoint)
-        res = self.oauth.get(uri)
-        if not res.content:
-            return {}
-        try:
-            res = res.json()
-        except:
-            raise ValueError("Cannot parse {} as JSON".format(res))
-        if "error" in res:
-            raise HomeConnectError(res["error"])
-        elif "data" not in res:
-            raise HomeConnectError("Unexpected error")
-        return res["data"]
-
-    def put(self, endpoint, data):
-        """Send (PUT) data to an endpoint."""
-        uri = self.get_uri(endpoint)
-        res = self.oauth.put(
-            uri,
-            json.dumps(data),
-            headers={
-                "Content-Type": "application/vnd.bsh.sdk.v1+json",
-                "accept": "application/vnd.bsh.sdk.v1+json",
-            },
-        )
-        if not res.content:
-            return {}
-        try:
-            res = res.json()
-        except:
-            raise ValueError("Cannot parse {} as JSON".format(res))
-        if "error" in res:
-            raise HomeConnectError(res["error"])
-        return res
-
-    def delete(self, endpoint):
-        """Delete an endpoint."""
-        uri = self.get_uri(endpoint)
-        res = self.oauth.delete(uri)
-        if not res.content:
-            return {}
-        try:
-            res = res.json()
-        except:
-            raise ValueError("Cannot parse {} as JSON".format(res))
-        if "error" in res:
-            raise HomeConnectError(res["error"])
-        return res
-
-    def get_appliances(self):
-        """Return a list of `HomeConnectAppliance` instances for all
-        appliances."""
-        data = self.get(ENDPOINT_APPLIANCES)
-        return [HomeConnectAppliance(self, **app) for app in data["homeappliances"]]
 
 
 class HomeConnectAppliance:
@@ -208,15 +208,13 @@ class HomeConnectAppliance:
 
     def listen_events(self, callback=None):
         """Spawn a thread with an event listener that updates the status."""
-        uri = self.hc.get_uri(
-            "{}/{}{}".format("/api/homeappliances", self.haId, "/events")
-        )
+        uri = f"{self.hc.host}/api/homeappliances/{self.haId}/events"
         from requests.exceptions import HTTPError
 
         sse = None
         while True:
             try:
-                sse = SSEClient(uri, session=self.hc.oauth, retry=100)
+                sse = SSEClient(uri, session=self.hc._oauth, retry=100)
             except HTTPError:
                 print("HTTPError while trying to listen")
                 time.sleep(0.1)
