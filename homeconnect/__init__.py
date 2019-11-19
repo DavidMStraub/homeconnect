@@ -1,1 +1,1 @@
-from .api import HomeConnect
+from .api import HomeConnect, HomeConnectAPI
