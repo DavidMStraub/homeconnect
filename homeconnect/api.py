@@ -135,7 +135,12 @@ class HomeConnect:
         """Delete an endpoint."""
         uri = self.get_uri(endpoint)
         res = self.oauth.delete(uri)
-        res = res.json()
+        if not res.content:
+            return {}
+        try:
+            res = res.json()
+        except:
+            raise ValueError("Cannot parse {} as JSON".format(res))
         if 'error' in res:
             raise HomeConnectError(res['error'])
         return res
