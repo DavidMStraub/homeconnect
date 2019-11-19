@@ -5,7 +5,7 @@ with open('README.md') as f:
     LONG_DESCRIPTION = f.read()
 
 setup(name='homeconnect',
-      version='0.2.2',
+      version='0.3',
       author='David M. Straub',
       author_email='david.straub@tum.de',
       url='https://github.com/DavidMStraub/homeconnect',
