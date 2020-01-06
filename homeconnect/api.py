@@ -233,7 +233,6 @@ class HomeConnectAppliance:
         function."""
         event = json.loads(event.data)
         d = self.json2dict(event["items"])
-        print("raw: ", event)
         self.status.update(d)
         if callback is not None:
             callback(self)
