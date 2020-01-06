@@ -65,10 +65,10 @@ class SSEClient(object):
         return self
 
     def __next__(self):
-        decoder = codecs.getincrementaldecoder(
-            self.resp.encoding)(errors='replace')
         while not self._event_complete():
             try:
+                decoder = codecs.getincrementaldecoder(
+                    self.resp.encoding)(errors='replace')
                 next_chunk = next(self.resp_iterator)
                 if not next_chunk:
                     raise EOFError()
