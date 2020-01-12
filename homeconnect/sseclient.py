@@ -10,6 +10,7 @@ import six
 import requests
 import http
 
+from requests.exceptions import HTTPError
 
 # Technically, we should support streams that mix line endings.  This regex,
 # however, assumes that a system will provide consistent line endings.
@@ -52,7 +53,10 @@ class SSEClient(object):
 
         # TODO: Ensure we're handling redirects.  Might also stick the 'origin'
         # attribute on Events like the Javascript spec requires.
-        self.resp.raise_for_status()
+        try:
+            self.resp.raise_for_status()
+        except HTTPError:
+            print("Failed connecting.")
 
     def _event_complete(self):
         return re.search(end_of_field, self.buf) is not None
@@ -61,10 +65,10 @@ class SSEClient(object):
         return self
 
     def __next__(self):
-        decoder = codecs.getincrementaldecoder(
-            self.resp.encoding)(errors='replace')
         while not self._event_complete():
             try:
+                decoder = codecs.getincrementaldecoder(
+                    self.resp.encoding)(errors='replace')
                 next_chunk = next(self.resp_iterator)
                 if not next_chunk:
                     raise EOFError()

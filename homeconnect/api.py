@@ -209,17 +209,7 @@ class HomeConnectAppliance:
     def listen_events(self, callback=None):
         """Spawn a thread with an event listener that updates the status."""
         uri = f"{self.hc.host}/api/homeappliances/{self.haId}/events"
-        from requests.exceptions import HTTPError
-
-        sse = None
-        while True:
-            try:
-                sse = SSEClient(uri, session=self.hc._oauth, retry=100)
-            except HTTPError:
-                print("HTTPError while trying to listen")
-                time.sleep(0.1)
-                continue
-            break
+        sse = SSEClient(uri, session=self.hc._oauth, retry=1000)
         Thread(target=self._listen, args=(sse, callback)).start()
 
     def _listen(self, sse, callback=None):
@@ -242,7 +232,8 @@ class HomeConnectAppliance:
         Updates the status with the event data and executes any callback
         function."""
         event = json.loads(event.data)
-        self.status.update(self.json2dict(event["items"]))
+        d = self.json2dict(event["items"])
+        self.status.update(d)
         if callback is not None:
             callback(self)
 
