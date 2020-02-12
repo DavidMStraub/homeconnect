@@ -268,9 +268,18 @@ class HomeConnectAppliance:
             return []
         return [p["key"] for p in programs["programs"]]
 
-    def start_program(self, program):
+    def get_program_options(self, programKey):
+        """Get program options."""
+        options = self.get(f"/programs/available/{programKey}")
+        if not options or "options" not in options:
+            return []
+        return [{ p["key"] : p } for p in options["options"]]
+
+    def start_program(self, programKey, options = None):
         """Start a program."""
-        return self.put("/programs/active", {"data": {"key": program}})
+        if options is not None:
+            return self.put("/programs/active", {"data": {"key": programKey, "options": options}})
+        return self.put("/programs/active", {"data": {"key": programKey}})
 
     def stop_program(self):
         """Stop a program."""
