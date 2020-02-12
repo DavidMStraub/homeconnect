@@ -214,11 +214,14 @@ class HomeConnectAppliance:
 
     def _listen(self, sse, callback=None):
         """Worker function for listener."""
-        for event in sse:
-            try:
-                self.handle_event(event, callback)
-            except ValueError:
-                pass
+        try:
+            for event in sse:
+                try:
+                    self.handle_event(event, callback)
+                except ValueError:
+                    pass
+        except TokenExpiredError:
+            self.listen_events(callback=callback)
 
     @staticmethod
     def json2dict(lst):
