@@ -125,7 +125,7 @@ class HomeConnectAPI:
 
     def get_authurl(self):
         """Get the URL needed for the authorization code grant flow."""
-        authorization_url, state = self._oauth.authorization_url(
+        authorization_url, _ = self._oauth.authorization_url(
             f"{self.host}/{ENDPOINT_AUTHORIZE}"
         )
         return authorization_url
@@ -268,18 +268,20 @@ class HomeConnectAppliance:
             return []
         return [p["key"] for p in programs["programs"]]
 
-    def get_program_options(self, programKey):
+    def get_program_options(self, program_key):
         """Get program options."""
-        options = self.get(f"/programs/available/{programKey}")
+        options = self.get(f"/programs/available/{program_key}")
         if not options or "options" not in options:
             return []
-        return [{ p["key"] : p } for p in options["options"]]
+        return [{p["key"]: p} for p in options["options"]]
 
-    def start_program(self, programKey, options = None):
+    def start_program(self, program_key, options=None):
         """Start a program."""
         if options is not None:
-            return self.put("/programs/active", {"data": {"key": programKey, "options": options}})
-        return self.put("/programs/active", {"data": {"key": programKey}})
+            return self.put(
+                "/programs/active", {"data": {"key": program_key, "options": options}}
+            )
+        return self.put("/programs/active", {"data": {"key": program_key}})
 
     def stop_program(self):
         """Stop a program."""
