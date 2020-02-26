@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 from threading import Thread
@@ -14,6 +15,8 @@ URL_API = "https://api.home-connect.com"
 ENDPOINT_AUTHORIZE = "/security/oauth/authorize"
 ENDPOINT_TOKEN = "/security/oauth/token"
 ENDPOINT_APPLIANCES = "/api/homeappliances"
+
+LOGGER = logging.getLogger("homeconnect")
 
 
 class HomeConnectError(Exception):
@@ -47,6 +50,7 @@ class HomeConnectAPI:
 
     def refresh_tokens(self) -> Dict[str, Union[str, int]]:
         """Refresh and return new tokens."""
+        LOGGER.info("Refreshing tokens ...")
         token = self._oauth.refresh_token(f"{self.host}{ENDPOINT_TOKEN}")
 
         if self.token_updater is not None:
@@ -64,6 +68,7 @@ class HomeConnectAPI:
         try:
             return getattr(self._oauth, method)(url, **kwargs)
         except TokenExpiredError:
+            LOGGER.warn("Token expired.")
             self._oauth.token = self.refresh_tokens()
 
             return getattr(self._oauth, method)(url, **kwargs)
@@ -163,6 +168,7 @@ class HomeConnect(HomeConnectAPI):
     def get_token(self, authorization_response):
         """Get the token given the redirect URL obtained from the
         authorization."""
+        LOGGER.info("Fetching token ...")
         token = self._oauth.fetch_token(
             f"{self.host}/{ENDPOINT_TOKEN}",
             authorization_response=authorization_response,
@@ -214,6 +220,7 @@ class HomeConnectAppliance:
 
     def _listen(self, sse, callback=None):
         """Worker function for listener."""
+        LOGGER.info("Listening to event stream for device %s", self.name)
         try:
             for event in sse:
                 try:
@@ -221,6 +228,7 @@ class HomeConnectAppliance:
                 except ValueError:
                     pass
         except TokenExpiredError:
+            LOGGER.error("Token expired in event stream for device %s", self.name)
             self.listen_events(callback=callback)
 
     @staticmethod
