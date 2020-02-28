@@ -6,10 +6,9 @@ import re
 import time
 import warnings
 
-import six
-
 import requests
-
+import six
+from oauthlib.oauth2 import TokenExpiredError
 from requests.exceptions import HTTPError
 
 # Technically, we should support streams that mix line endings.  This regex,
@@ -54,7 +53,15 @@ class SSEClient(object):
 
         # Use session if set.  Otherwise fall back to requests module.
         requester = self.session or requests
-        self.resp = requester.get(self.url, stream=True, **self.requests_kwargs)
+        try:
+            self.resp = requester.get(self.url, stream=True, **self.requests_kwargs)
+        except TokenExpiredError as e:
+            LOGGER.info("Token expired in event stream.")
+            if self.session is None or not hasattr(self.session, "refresh_tokens"):
+                LOGGER.error("Cannot refresh token in event stream.")
+                raise e
+            self.session.refresh_tokens()
+            self.resp = requester.get(self.url, stream=True, **self.requests_kwargs)
         self.resp_iterator = self.resp.iter_content(chunk_size=self.chunk_size)
 
         # TODO: Ensure we're handling redirects.  Might also stick the 'origin'
@@ -84,7 +91,7 @@ class SSEClient(object):
 
             # except (StopIteration, requests.RequestException, EOFError, http.client.IncompleteRead, ValueError) as e:
             except Exception as e:
-                LOGGER.error(e)
+                LOGGER.exception(e)
                 time.sleep(self.retry / 1000.0)
                 self._connect()
 

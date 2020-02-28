@@ -68,7 +68,7 @@ class HomeConnectAPI:
         try:
             return getattr(self._oauth, method)(url, **kwargs)
         except TokenExpiredError:
-            LOGGER.warn("Token expired.")
+            LOGGER.warning("Token expired.")
             self._oauth.token = self.refresh_tokens()
 
             return getattr(self._oauth, method)(url, **kwargs)
@@ -221,15 +221,11 @@ class HomeConnectAppliance:
     def _listen(self, sse, callback=None):
         """Worker function for listener."""
         LOGGER.info("Listening to event stream for device %s", self.name)
-        try:
-            for event in sse:
-                try:
-                    self.handle_event(event, callback)
-                except ValueError:
-                    pass
-        except TokenExpiredError:
-            LOGGER.error("Token expired in event stream for device %s", self.name)
-            self.listen_events(callback=callback)
+        for event in sse:
+            try:
+                self.handle_event(event, callback)
+            except ValueError:
+                pass
 
     @staticmethod
     def json2dict(lst):
