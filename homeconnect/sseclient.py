@@ -53,15 +53,7 @@ class SSEClient(object):
 
         # Use session if set.  Otherwise fall back to requests module.
         requester = self.session or requests
-        try:
-            self.resp = requester.get(self.url, stream=True, **self.requests_kwargs)
-        except TokenExpiredError as e:
-            LOGGER.info("Token expired in event stream.")
-            if self.session is None or not hasattr(self.session, "refresh_tokens"):
-                LOGGER.error("Cannot refresh token in event stream.")
-                raise e
-            self.session.refresh_tokens()
-            self.resp = requester.get(self.url, stream=True, **self.requests_kwargs)
+        self.resp = requester.get(self.url, stream=True, **self.requests_kwargs)
         self.resp_iterator = self.resp.iter_content(chunk_size=self.chunk_size)
 
         # TODO: Ensure we're handling redirects.  Might also stick the 'origin'

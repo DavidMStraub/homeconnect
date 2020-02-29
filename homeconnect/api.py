@@ -221,11 +221,18 @@ class HomeConnectAppliance:
     def _listen(self, sse, callback=None):
         """Worker function for listener."""
         LOGGER.info("Listening to event stream for device %s", self.name)
-        for event in sse:
-            try:
-                self.handle_event(event, callback)
-            except ValueError:
-                pass
+        try:
+            for event in sse:
+                try:
+                    self.handle_event(event, callback)
+                except ValueError:
+                    pass
+        except TokenExpiredError as e:
+            LOGGER.info("Token expired in event stream.")
+            self.hc.refresh_tokens()
+            uri = f"{self.hc.host}/api/homeappliances/{self.haId}/events"
+            sse = SSEClient(uri, session=self.hc._oauth, retry=1000)
+            self._listen(sse, callback=callback)
 
     @staticmethod
     def json2dict(lst):
