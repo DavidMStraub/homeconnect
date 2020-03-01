@@ -229,7 +229,7 @@ class HomeConnectAppliance:
                     pass
         except TokenExpiredError as e:
             LOGGER.info("Token expired in event stream.")
-            self.hc.refresh_tokens()
+            self.hc._oauth.token = self.hc.refresh_tokens()
             uri = f"{self.hc.host}/api/homeappliances/{self.haId}/events"
             sse = SSEClient(uri, session=self.hc._oauth, retry=1000)
             self._listen(sse, callback=callback)
