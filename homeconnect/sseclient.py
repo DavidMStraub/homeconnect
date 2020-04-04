@@ -83,7 +83,7 @@ class SSEClient(object):
 
             # except (StopIteration, requests.RequestException, EOFError, http.client.IncompleteRead, ValueError) as e:
             except Exception as e:
-                LOGGER.exception(e)
+                LOGGER.warning("Exception while reading event: ", exc_info=True)
                 time.sleep(self.retry / 1000.0)
                 self._connect()
 
