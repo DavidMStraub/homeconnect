@@ -62,6 +62,9 @@ class SSEClient(object):
             self.resp.raise_for_status()
         except HTTPError:
             LOGGER.error("Failed connecting.")
+            # Wait 10 times longer if connection failed due to rate limits
+            time.sleep(10 * self.retry / 1000.0)
+            self._connect()
 
     def _event_complete(self):
         return re.search(end_of_field, self.buf) is not None
