@@ -301,9 +301,13 @@ class HomeConnectAppliance:
         """Stop a program."""
         return self.delete("/programs/active")
 
-    def select_program(self, data):
+    def select_program(self, program, options=None):
         """Select a program."""
-        return self.put("/programs/selected", data)
+        if options is None:
+            _options = {}
+        else:
+            _options = {"options": options}
+        return self.put("/programs/selected", {"data": {"key": program, **_options}})
 
     def get_status(self):
         """Get the status (as dictionary) and update `self.status`."""
@@ -327,3 +331,32 @@ class HomeConnectAppliance:
             "/settings/{}".format(settingkey),
             {"data": {"key": settingkey, "value": value}},
         )
+
+    def set_options_active_program(self, option_key, value, unit=None):
+        """Change the option `option_key` of the currently active program."""
+        if unit is None:
+            _unit = {}
+        else:
+            _unit = {"unit": unit}
+        return self.put(
+            f"/programs/active/options/{option_key}",
+            {"data": {"key": option_key, "value": value, **_unit}},
+        )
+
+    def set_options_selected_program(self, option_key, value, unit=None):
+        """Change the option `option_key` of the currently selected program."""
+        if unit is None:
+            _unit = {}
+        else:
+            _unit = {"unit": unit}
+        return self.put(
+            f"/programs/selected/options/{option_key}",
+            {"data": {"key": option_key, "value": value, **_unit}},
+        )
+
+    def execute_command(self, command):
+        """Execute a command."""
+        return self.put(
+            f"/commands/{command}", {"data": {"key": command, "value": True}},
+        )
+
