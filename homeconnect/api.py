@@ -15,6 +15,7 @@ URL_API = "https://api.home-connect.com"
 ENDPOINT_AUTHORIZE = "/security/oauth/authorize"
 ENDPOINT_TOKEN = "/security/oauth/token"
 ENDPOINT_APPLIANCES = "/api/homeappliances"
+TIMEOUT_S = 45
 
 LOGGER = logging.getLogger("homeconnect")
 
@@ -215,7 +216,7 @@ class HomeConnectAppliance:
     def listen_events(self, callback=None):
         """Spawn a thread with an event listener that updates the status."""
         uri = f"{self.hc.host}/api/homeappliances/{self.haId}/events"
-        sse = SSEClient(uri, session=self.hc._oauth, retry=1000)
+        sse = SSEClient(uri, session=self.hc._oauth, retry=1000, timeout=TIMEOUT_S)
         Thread(target=self._listen, args=(sse, callback)).start()
 
     def _listen(self, sse, callback=None):
@@ -231,7 +232,7 @@ class HomeConnectAppliance:
             LOGGER.info("Token expired in event stream.")
             self.hc._oauth.token = self.hc.refresh_tokens()
             uri = f"{self.hc.host}/api/homeappliances/{self.haId}/events"
-            sse = SSEClient(uri, session=self.hc._oauth, retry=1000)
+            sse = SSEClient(uri, session=self.hc._oauth, retry=1000, timeout=TIMEOUT_S)
             self._listen(sse, callback=callback)
 
     @staticmethod
