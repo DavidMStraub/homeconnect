@@ -15,7 +15,7 @@ URL_API = "https://api.home-connect.com"
 ENDPOINT_AUTHORIZE = "/security/oauth/authorize"
 ENDPOINT_TOKEN = "/security/oauth/token"
 ENDPOINT_APPLIANCES = "/api/homeappliances"
-TIMEOUT_S = 45
+TIMEOUT_S = 120
 
 LOGGER = logging.getLogger("homeconnect")
 
