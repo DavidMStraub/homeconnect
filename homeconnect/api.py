@@ -31,9 +31,10 @@ class HomeConnectAPI:
         client_id: str = None,
         client_secret: str = None,
         redirect_uri: str = None,
+        api_url: str = None,
         token_updater: Optional[Callable[[str], None]] = None,
     ):
-        self.host = URL_API
+        self.host = api_url if api_url else URL_API
         self.client_id = client_id
         self.client_secret = client_secret
         self.redirect_uri = redirect_uri
