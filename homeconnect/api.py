@@ -141,10 +141,19 @@ class HomeConnectAPI:
 class HomeConnect(HomeConnectAPI):
     """Connection to the HomeConnect OAuth API."""
 
-    def __init__(self, client_id, client_secret="", redirect_uri="", token_cache=None):
+    def __init__(
+        self,
+        client_id,
+        client_secret="",
+        redirect_uri="",
+        api_url: Optional[str] = None,
+        token_cache=None,
+    ):
         """Initialize the connection."""
         self.token_cache = token_cache or "homeconnect_oauth_token.json"
-        super().__init__(None, client_id, client_secret, redirect_uri, self.token_dump)
+        super().__init__(
+            None, client_id, client_secret, redirect_uri, api_url, self.token_dump
+        )
 
     def token_dump(self, token):
         """Dump the token to a JSON file."""
