@@ -176,7 +176,6 @@ class HomeConnectAPI:
                             break
                 except ValueError:
                     pass
-        # except TokenExpiredError as e:
         except TokenExpiredError:
             LOGGER.info("Token expired in event stream.")
             self._oauth.token = self.refresh_tokens()
