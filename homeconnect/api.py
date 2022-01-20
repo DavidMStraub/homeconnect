@@ -66,9 +66,7 @@ class HomeConnectAPI:
         We don't use the built-in token refresh mechanism of OAuth2 session because
         we want to allow overriding the token refresh logic.
         """
-        if not path.startswith("/"):
-            path = "/" + path
-        url = f"{self.host}{path}"
+        url = f"{self.host}/{path.lstrip('/')}"
         try:
             return getattr(self._oauth, method)(url, **kwargs)
         except TokenExpiredError:
