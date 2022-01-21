@@ -40,7 +40,7 @@ class HomeConnectAPI:
         self.redirect_uri = redirect_uri
         self.token_updater = token_updater
 
-        self._appliances = []
+        self._appliances = {}
         self.listening_events = False
 
         extra = {"client_id": self.client_id, "client_secret": self.client_secret}
@@ -131,24 +131,21 @@ class HomeConnectAPI:
         """Return a list of `HomeConnectAppliance` instances for all
         appliances."""
 
-        appliances = []
+        appliances = {}
 
         data = self.get(ENDPOINT_APPLIANCES)
         for home_appliance in data["homeappliances"]:
-            found_matching = False
-            for appliance in self._appliances:
-                if appliance.haId == home_appliance["haId"]:
-                    appliance.connected = home_appliance["connected"]
-                    appliances += appliance
-                    found_matching = True
-                    break
+            haId = home_appliance["haId"]
 
-            if not found_matching:
-                appliances += [HomeConnectAppliance(self, **home_appliance)]
+            if haId in self._appliances:
+                appliances[haId] = self._appliances[haId]
+                appliances[haId].connected = home_appliance["connected"]
                 continue
 
+            appliances[haId] = HomeConnectAppliance(self, **home_appliance)
+
         self._appliances = appliances
-        return self._appliances
+        return list(self._appliances.values())
 
     def get_authurl(self):
         """Get the URL needed for the authorization code grant flow."""
@@ -170,7 +167,7 @@ class HomeConnectAPI:
         try:
             for event in sse:
                 try:
-                    for appliance in self._appliances:
+                    for appliance in self._appliances.values():
                         if appliance.haId == event.id:
                             self.handle_event(event, appliance)
                             break
