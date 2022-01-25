@@ -66,7 +66,7 @@ class HomeConnectAPI:
         We don't use the built-in token refresh mechanism of OAuth2 session because
         we want to allow overriding the token refresh logic.
         """
-        url = f"{self.host}/{path}"
+        url = f"{self.host}/{path.lstrip('/')}"
         try:
             return getattr(self._oauth, method)(url, **kwargs)
         except TokenExpiredError:
@@ -368,6 +368,6 @@ class HomeConnectAppliance:
     def execute_command(self, command):
         """Execute a command."""
         return self.put(
-            f"/commands/{command}", {"data": {"key": command, "value": True}},
+            f"/commands/{command}",
+            {"data": {"key": command, "value": True}},
         )
-
