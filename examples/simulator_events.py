@@ -1,13 +1,13 @@
-from homeconnect import HomeConnect
 import webbrowser
-import time
+
+from homeconnect import HomeConnect
+
 
 def print_status(app):
     print(app.name, app.status)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     client_id = input("Please enter the client ID: ")
     client_secret = input("Please enter the client secret: ")
     redirect_uri = input("Please enter the redirect URI: ")

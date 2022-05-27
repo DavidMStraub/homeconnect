@@ -8,7 +8,6 @@ import warnings
 
 import requests
 import six
-from oauthlib.oauth2 import TokenExpiredError
 from requests.exceptions import HTTPError
 
 # Technically, we should support streams that mix line endings.  This regex,
@@ -42,7 +41,7 @@ class SSEClient(object):
         self.requests_kwargs["headers"]["Accept"] = "text/event-stream"
 
         # Keep data here as it streams in
-        self.buf = u""
+        self.buf = ""
 
         self._connect()
 
@@ -85,7 +84,7 @@ class SSEClient(object):
                 self.buf += decoder.decode(next_chunk)
 
             # except (StopIteration, requests.RequestException, EOFError, http.client.IncompleteRead, ValueError) as e:
-            except Exception as e:
+            except Exception:
                 LOGGER.warning("Exception while reading event: ", exc_info=True)
                 time.sleep(self.retry / 1000.0)
                 self._connect()

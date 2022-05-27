@@ -1,1 +1,1 @@
-from .api import HomeConnect, HomeConnectAPI
+"""Home Connect library."""

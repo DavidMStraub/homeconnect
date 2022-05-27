@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  - push
+  - pull_request
+
+env:
+  DEFAULT_PYTHON: "3.9"
+
+jobs:
+  black:
+    name: Check Black
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+          pip --version
+
+      - name: Install Black
+        run: |
+          pip install black
+
+      - name: Run Black
+        run: |
+          black --check --diff homeconnect
+
+      - name: Run Black on examples
+        run: |
+          black --check --diff examples
+
+  flake8:
+    name: Check Flake8
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+          pip --version
+
+      - name: Install Flake8
+        run: |
+          pip install flake8
+
+      - name: Run Flake8
+        run: |
+          flake8 homeconnect
+
+      - name: Run Flake8 on examples
+        run: |
+          flake8 examples
+
+  isort:
+    name: Check isort
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+          pip --version
+
+      - name: Install isort
+        run: |
+          pip install isort
+
+      - name: Run isort
+        run: |
+          isort --check-only homeconnect
+
+      - name: Run isort on examples
+        run: |
+          isort --check-only examples

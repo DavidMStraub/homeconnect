@@ -85,7 +85,7 @@ class HomeConnectAPI:
             return {}
         try:
             res = res.json()
-        except:
+        except Exception:
             raise ValueError("Cannot parse {} as JSON".format(res))
         if "error" in res:
             raise HomeConnectError(res["error"])
@@ -108,7 +108,7 @@ class HomeConnectAPI:
             return {}
         try:
             res = res.json()
-        except:
+        except Exception:
             raise ValueError("Cannot parse {} as JSON".format(res))
         if "error" in res:
             raise HomeConnectError(res["error"])
@@ -121,7 +121,7 @@ class HomeConnectAPI:
             return {}
         try:
             res = res.json()
-        except:
+        except Exception:
             raise ValueError("Cannot parse {} as JSON".format(res))
         if "error" in res:
             raise HomeConnectError(res["error"])
