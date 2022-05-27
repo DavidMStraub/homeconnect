@@ -186,10 +186,14 @@ class HomeConnectAPI:
         Updates the status with the event data and executes any callback
         function."""
         event_data = json.loads(event.data)
-        d = self.json2dict(event_data["items"])
-        appliance.status.update(d)
-        if appliance.event_callback is not None:
-            appliance.event_callback(appliance)
+        items = event_data.get("items")
+        if items is not None:
+            d = self.json2dict(items)
+            appliance.status.update(d)
+            if appliance.event_callback is not None:
+                appliance.event_callback(appliance)
+        else:
+            LOGGER.warning("No items in event data: %s", event_data)
 
     @staticmethod
     def json2dict(lst):
