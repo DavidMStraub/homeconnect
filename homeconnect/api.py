@@ -188,12 +188,20 @@ class HomeConnectAPI:
         event_data = json.loads(event.data)
         items = event_data.get("items")
         if items is not None:
-            d = self.json2dict(items)
-            appliance.status.update(d)
-            if appliance.event_callback is not None:
-                appliance.event_callback(appliance)
+            data_dict = self.json2dict(items)
         else:
-            LOGGER.warning("No items in event data: %s", event_data)
+            data_dict = {event_data.pop("key"): event_data}
+
+        if event.event == "NOTIFY" or event.event == "STATUS":
+            appliance.status.update(data_dict)
+
+        if event.event == "CONNECTED":
+            appliance.connected = True
+        if event.event == "DISCONNECTED":
+            appliance.connected = False
+
+        if appliance.event_callback is not None:
+            appliance.event_callback(appliance)
 
     @staticmethod
     def json2dict(lst):
