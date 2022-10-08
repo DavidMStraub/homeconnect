@@ -195,13 +195,16 @@ class HomeConnectAPI:
         if event.event == "NOTIFY" or event.event == "STATUS":
             appliance.status.update(data_dict)
 
-        if event.event == "CONNECTED":
+        elif event.event == "CONNECTED":
             appliance.connected = True
-        if event.event == "DISCONNECTED":
+        elif event.event == "DISCONNECTED":
             appliance.connected = False
 
         if appliance.event_callback is not None:
-            appliance.event_callback(appliance)
+            try:
+                appliance.event_callback(appliance, event.event, data_dict)
+            except TypeError:
+                appliance.event_callback(appliance)
 
     @staticmethod
     def json2dict(lst):
