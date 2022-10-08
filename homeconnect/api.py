@@ -201,7 +201,10 @@ class HomeConnectAPI:
             appliance.connected = False
 
         if appliance.event_callback is not None:
-            appliance.event_callback(appliance, event.event, data_dict)
+            try:
+                appliance.event_callback(appliance, event.event, data_dict)
+            except TypeError:
+                appliance.event_callback(appliance)
 
     @staticmethod
     def json2dict(lst):
