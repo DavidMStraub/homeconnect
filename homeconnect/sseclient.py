@@ -42,7 +42,7 @@ class SSEClient(object):
         self.requests_kwargs["headers"]["Accept"] = "text/event-stream"
 
         # Keep data here as it streams in
-        self.buf = u""
+        self.buf = ""
 
         self._connect()
 
@@ -55,6 +55,8 @@ class SSEClient(object):
         requester = self.session or requests
         self.resp = requester.get(self.url, stream=True, **self.requests_kwargs)
         self.resp_iterator = self.resp.iter_content(chunk_size=self.chunk_size)
+
+        self.resp.encoding = "UTF-8"
 
         # TODO: Ensure we're handling redirects.  Might also stick the 'origin'
         # attribute on Events like the Javascript spec requires.
