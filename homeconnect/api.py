@@ -12,9 +12,9 @@ from requests_oauthlib import OAuth2Session
 from .sseclient import SSEClient
 
 URL_API = "https://api.home-connect.com"
-ENDPOINT_AUTHORIZE = "/security/oauth/authorize"
-ENDPOINT_TOKEN = "/security/oauth/token"
-ENDPOINT_APPLIANCES = "/api/homeappliances"
+ENDPOINT_AUTHORIZE = "security/oauth/authorize"
+ENDPOINT_TOKEN = "security/oauth/token"
+ENDPOINT_APPLIANCES = "api/homeappliances"
 TIMEOUT_S = 120
 
 LOGGER = logging.getLogger("homeconnect")
