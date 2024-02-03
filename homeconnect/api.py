@@ -12,9 +12,9 @@ from requests_oauthlib import OAuth2Session
 from .sseclient import SSEClient
 
 URL_API = "https://api.home-connect.com"
-ENDPOINT_AUTHORIZE = "security/oauth/authorize"
-ENDPOINT_TOKEN = "security/oauth/token"
-ENDPOINT_APPLIANCES = "api/homeappliances"
+ENDPOINT_AUTHORIZE = "/security/oauth/authorize"
+ENDPOINT_TOKEN = "/security/oauth/token"
+ENDPOINT_APPLIANCES = "/api/homeappliances"
 TIMEOUT_S = 120
 
 LOGGER = logging.getLogger("homeconnect")
@@ -69,7 +69,7 @@ class HomeConnectAPI:
         We don't use the built-in token refresh mechanism of OAuth2 session because
         we want to allow overriding the token refresh logic.
         """
-        url = f"{self.host}/{path.lstrip('/')}"
+        url = f"{self.host}{path}"
         try:
             return getattr(self._oauth, method)(url, **kwargs)
         except TokenExpiredError:
@@ -150,7 +150,7 @@ class HomeConnectAPI:
     def get_authurl(self):
         """Get the URL needed for the authorization code grant flow."""
         authorization_url, _ = self._oauth.authorization_url(
-            f"{self.host}/{ENDPOINT_AUTHORIZE}"
+            f"{self.host}{ENDPOINT_AUTHORIZE}"
         )
         return authorization_url
 
@@ -256,7 +256,7 @@ class HomeConnect(HomeConnectAPI):
         authorization."""
         LOGGER.info("Fetching token ...")
         token = self._oauth.fetch_token(
-            f"{self.host}/{ENDPOINT_TOKEN}",
+            f"{self.host}{ENDPOINT_TOKEN}",
             authorization_response=authorization_response,
             client_secret=self.client_secret,
         )
