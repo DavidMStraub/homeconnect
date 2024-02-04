@@ -1,12 +1,11 @@
-from setuptools import setup, find_packages
-
+from setuptools import find_packages, setup
 
 with open("README.md") as f:
     LONG_DESCRIPTION = f.read()
 
 setup(
     name="homeconnect",
-    version="0.7.3",
+    version="0.7.4",
     author="David M. Straub",
     author_email="david.straub@tum.de",
     url="https://github.com/DavidMStraub/homeconnect",
@@ -16,5 +15,9 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=["requests", "requests_oauthlib"],
-    extras_require={"testing": ["nose",],},
+    extras_require={
+        "testing": [
+            "nose",
+        ],
+    },
 )
