@@ -7,7 +7,7 @@ setup(
     name="homeconnect",
     version="0.7.4",
     author="David M. Straub",
-    author_email="david.straub@tum.de",
+    author_email="straub@protonmail.com",
     url="https://github.com/DavidMStraub/homeconnect",
     description="Python client for the BSH Home Connect REST API",
     long_description=LONG_DESCRIPTION,
