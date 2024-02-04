@@ -150,7 +150,7 @@ class HomeConnectAPI:
     def get_authurl(self):
         """Get the URL needed for the authorization code grant flow."""
         authorization_url, _ = self._oauth.authorization_url(
-            f"{self.host}/{ENDPOINT_AUTHORIZE}"
+            f"{self.host}{ENDPOINT_AUTHORIZE}"
         )
         return authorization_url
 
@@ -256,7 +256,7 @@ class HomeConnect(HomeConnectAPI):
         authorization."""
         LOGGER.info("Fetching token ...")
         token = self._oauth.fetch_token(
-            f"{self.host}/{ENDPOINT_TOKEN}",
+            f"{self.host}{ENDPOINT_TOKEN}",
             authorization_response=authorization_response,
             client_secret=self.client_secret,
         )
