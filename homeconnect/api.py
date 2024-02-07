@@ -8,6 +8,7 @@ from typing import Callable, Dict, Optional, Union
 from oauthlib.oauth2 import TokenExpiredError
 from requests import Response
 from requests_oauthlib import OAuth2Session
+from requests.adapters import HTTPAdapter, Retry
 
 from .sseclient import SSEClient
 
@@ -16,6 +17,8 @@ ENDPOINT_AUTHORIZE = "/security/oauth/authorize"
 ENDPOINT_TOKEN = "/security/oauth/token"
 ENDPOINT_APPLIANCES = "/api/homeappliances"
 TIMEOUT_S = 120
+TOTAL_RETRIES = 1
+
 
 LOGGER = logging.getLogger("homeconnect")
 
@@ -52,6 +55,9 @@ class HomeConnectAPI:
             token=token,
             token_updater=token_updater,
         )
+        self.retry = Retry(TOTAL_RETRIES, status_forcelist=[429])
+        self._oauth.mount("https://", HTTPAdapter(max_retries=self.retry))
+        self._oauth.mount("http://", HTTPAdapter(max_retries=self.retry))
 
     def refresh_tokens(self) -> Dict[str, Union[str, int]]:
         """Refresh and return new tokens."""
