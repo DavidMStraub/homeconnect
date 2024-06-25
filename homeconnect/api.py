@@ -192,7 +192,7 @@ class HomeConnectAPI:
         else:
             data_dict = {event_data.pop("key"): event_data}
 
-        if event.event == "NOTIFY" or event.event == "STATUS":
+        if event.event in ("NOTIFY", "STATUS", "EVENT"):
             appliance.status.update(data_dict)
 
         elif event.event == "CONNECTED":
