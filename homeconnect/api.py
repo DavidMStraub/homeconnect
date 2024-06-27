@@ -8,6 +8,7 @@ from typing import Callable, Dict, Optional, Union
 from oauthlib.oauth2 import TokenExpiredError
 from requests import Response
 from requests_oauthlib import OAuth2Session
+from requests.exceptions import RetryError
 from requests.adapters import HTTPAdapter, Retry
 
 from .sseclient import SSEClient
@@ -83,6 +84,9 @@ class HomeConnectAPI:
             self._oauth.token = self.refresh_tokens()
 
             return getattr(self._oauth, method)(url, **kwargs)
+        except RetryError as e:
+            LOGGER.warning("Retry failed: %s", e)
+            return e.response
 
     def get(self, endpoint):
         """Get data as dictionary from an endpoint."""
