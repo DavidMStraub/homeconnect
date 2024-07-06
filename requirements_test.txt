@@ -1,4 +1,4 @@
-certifi==2024.6.2
+certifi==2024.7.4
 charset-normalizer==3.3.2
 coverage==7.5.4
 execnet==2.1.1
