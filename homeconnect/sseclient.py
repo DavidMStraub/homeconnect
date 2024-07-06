@@ -7,7 +7,6 @@ import time
 import warnings
 
 import requests
-import six
 from oauthlib.oauth2 import TokenExpiredError
 from requests.exceptions import HTTPError
 
@@ -114,9 +113,6 @@ class SSEClient(object):
             self.last_id = msg.id
 
         return msg
-
-    if six.PY2:
-        next = __next__
 
 
 class Event(object):
