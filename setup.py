@@ -5,7 +5,7 @@ with open("README.md") as f:
 
 setup(
     name="homeconnect",
-    version="0.7.4",
+    version="0.8.0",
     author="David M. Straub",
     author_email="straub@protonmail.com",
     url="https://github.com/DavidMStraub/homeconnect",
