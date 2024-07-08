@@ -1,15 +1,15 @@
 import json
 import logging
 import os
-import time
 from threading import Thread
+import time
 from typing import Callable, Dict, Optional, Union
 
 from oauthlib.oauth2 import TokenExpiredError
 from requests import Response
-from requests_oauthlib import OAuth2Session
-from requests.exceptions import RetryError
 from requests.adapters import HTTPAdapter, Retry
+from requests.exceptions import RetryError
+from requests_oauthlib import OAuth2Session
 
 from .sseclient import SSEClient
 
@@ -138,8 +138,7 @@ class HomeConnectAPI:
         return res
 
     def get_appliances(self):
-        """Return a list of `HomeConnectAppliance` instances for all
-        appliances."""
+        """Return a list of `HomeConnectAppliance` instances for all appliances."""
 
         appliances = {}
 
@@ -194,7 +193,8 @@ class HomeConnectAPI:
         """Handle a new event.
 
         Updates the status with the event data and executes any callback
-        function."""
+        function.
+        """
         event_data = json.loads(event.data)
         items = event_data.get("items")
         if items is not None:
@@ -218,8 +218,11 @@ class HomeConnectAPI:
 
     @staticmethod
     def json2dict(lst):
-        """Turn a list of dictionaries where one key is called 'key'
-        into a dictionary with the value of 'key' as key."""
+        """Convert JSON to dictionary.
+
+        Turn a list of dictionaries where one key is called 'key'
+        into a dictionary with the value of 'key' as key.
+        """
         return {d.pop("key"): d for d in lst}
 
 
@@ -246,8 +249,7 @@ class HomeConnect(HomeConnectAPI):
             json.dump(token, f)
 
     def token_load(self):
-        """Load the token from the cache if exists it and is not expired,
-        otherwise return None."""
+        """Load the token from the cache if exists and not expired."""
         if not os.path.exists(self.token_cache):
             return None
         with open(self.token_cache, "r") as f:
@@ -257,7 +259,10 @@ class HomeConnect(HomeConnectAPI):
         self._oauth = OAuth2Session(
             client_id=self.client_id,
             redirect_uri=self.redirect_uri,
-            auto_refresh_kwargs={"client_id": self.client_id, "client_secret": self.client_secret},
+            auto_refresh_kwargs={
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            },
             token=token,
             token_updater=self.token_updater,
         )
@@ -269,8 +274,7 @@ class HomeConnect(HomeConnectAPI):
         return token["expires_at"] - now < 60
 
     def get_token(self, authorization_response):
-        """Get the token given the redirect URL obtained from the
-        authorization."""
+        """Get the token given the redirect URL obtained from the authorization."""
         LOGGER.info("Fetching token ...")
         token = self._oauth.fetch_token(
             f"{self.host}{ENDPOINT_TOKEN}",
@@ -307,7 +311,10 @@ class HomeConnectAppliance:
         self.event_callback = None
 
     def __repr__(self):
-        return "HomeConnectAppliance(hc, haId='{}', vib='{}', brand='{}', type='{}', name='{}', enumber='{}', connected={})".format(
+        return (
+            "HomeConnectAppliance(hc, haId='{}', vib='{}', brand='{}'"
+            ", type='{}', name='{}', enumber='{}', connected={})"
+        ).format(
             self.haId,
             self.vib,
             self.brand,
@@ -318,7 +325,7 @@ class HomeConnectAppliance:
         )
 
     def listen_events(self, callback=None):
-        """Register event callback method"""
+        """Register event callback method."""
         self.event_callback = callback
 
         if not self.hc.listening_events:
@@ -326,8 +333,11 @@ class HomeConnectAppliance:
 
     @staticmethod
     def json2dict(lst):
-        """Turn a list of dictionaries where one key is called 'key'
-        into a dictionary with the value of 'key' as key."""
+        """Convert JSON to dictionary.
+
+        Turn a list of dictionaries where one key is called 'key'
+        into a dictionary with the value of 'key' as key.
+        """
         return {d.pop("key"): d for d in lst}
 
     def get(self, endpoint):
