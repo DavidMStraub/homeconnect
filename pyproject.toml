@@ -1,0 +1,27 @@
+[tool.ruff.lint]
+select = [
+    "D",  # docstrings
+    "E",  # pycodestyle
+    "G",  # flake8-logging-format
+    "I",  # isort
+    "W",  # pycodestyle
+]
+
+ignore = [
+    "D100",  # Missing docstring in public module
+    "D101",  # Missing docstring in public class
+    "D102",  # Missing docstring in public method
+    "D104",  # Missing docstring in public package
+    "D105",  # Missing docstring in magic method
+    "D107",  # Missing docstring in `__init__`
+    "D202",  # No blank lines allowed aftee function docstring
+    "D203",  # 1 blank line required before class docstring
+    "D213",  # Multi-line docstring summary should start at the second line
+    "D401",  # First line should be in imperative mood
+    "E722",  # Do not use bare `except`
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+split-on-trailing-comma = false
