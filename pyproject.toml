@@ -1,3 +1,6 @@
+[tool.black]
+line-length = 88
+
 [tool.ruff.lint]
 select = [
     "D",  # docstrings
