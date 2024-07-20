@@ -256,16 +256,6 @@ class HomeConnect(HomeConnectAPI):
             token = json.load(f)
         now = int(time.time())
         token["expires_in"] = token.get("expires_at", now - 1) - now
-        self._oauth = OAuth2Session(
-            client_id=self.client_id,
-            redirect_uri=self.redirect_uri,
-            auto_refresh_kwargs={
-                "client_id": self.client_id,
-                "client_secret": self.client_secret,
-            },
-            token=token,
-            token_updater=self.token_updater,
-        )
         return token
 
     def token_expired(self, token):
