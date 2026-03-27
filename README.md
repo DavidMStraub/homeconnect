@@ -17,6 +17,16 @@ hc.get_token(auth_result)
 # list the existing appliances
 hc.get_appliances()
 ```
+## Examples
+### Simulator example
+
+To test with the simulator, you can just use the sample file [examples/simulator_events.py](examples/simulator_events.py). First you need to prepare your Home Connect Developer Account as described [here](https://api-docs.home-connect.com/quickstart/?#authorization). Check out this repository and make sure you have the library installed in your python environment (`pip install -e .`). Afterwards you can run the `simulator_events.py` file. It will ask you for the Client ID, insert the one for `API Web Client` from the Applications page in your developer dashboard. A login page will be opened in your browser that requires you to login to your Home Connect account and grant access. After your approval, it will forward you to the quickstart guide. From this page you need to copy the full URL (it includes the authorization code) and paste it to the console that is running the `simulator_events.py`. That's already it. In the Home Connect Dashboard you can switch to the "Simulators" tab, play with the devices and see the events coming in your python console.
+
+Note: In case the script fails with a message like "HomeAppliance is offline" make sure your devices in the simulator are marked as "Connected" and retry.
+
+### Production environment example
+
+If you want to test with your real devices, checkout the [examples/prod_events.py](examples/prod_events.py) script. You will also need a developer account (as mentioned above) as well as a regular homeconnect account (singlekey-id). In your developer dashboard you should create a new new application of the type "Authorization Code Grant Flow". Run the script and enter your project credentials, all data from your devices will be printed on the console.
 
 ## Disclaimer
 
