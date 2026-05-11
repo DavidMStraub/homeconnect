@@ -16,4 +16,4 @@ requests-mock==1.12.1
 requests-oauthlib==2.0.0
 responses==0.25.3
 typing_extensions==4.12.2
-urllib3==2.6.0
+urllib3==2.7.0
