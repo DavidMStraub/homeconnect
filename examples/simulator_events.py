@@ -2,6 +2,8 @@ from homeconnect import HomeConnect
 import webbrowser
 import time
 
+SIMULATOR_API = 'https://simulator.home-connect.com'
+
 def print_status(app):
     print(app.name, app.status)
 
@@ -9,10 +11,10 @@ def print_status(app):
 
 if __name__ == '__main__':
     client_id = input("Please enter the client ID: ")
-    client_secret = input("Please enter the client secret: ")
-    redirect_uri = input("Please enter the redirect URI: ")
+    client_secret = '' # not necessary for the simulator
+    redirect_uri = 'https://api-docs.home-connect.com/quickstart/' # required by the api, all other values are blocked
 
-    hc = HomeConnect(client_id, client_secret, redirect_uri, simulate=True)
+    hc = HomeConnect(client_id, client_secret, redirect_uri, api_url=SIMULATOR_API)
 
     webbrowser.open(hc.get_authurl())
 

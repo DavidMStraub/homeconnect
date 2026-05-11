@@ -18,6 +18,12 @@ hc.get_token(auth_result)
 hc.get_appliances()
 ```
 
+## Simulator example
+
+To test with the simulator, you can just use the sample file [examples/simulator_events.py](examples/simulator_events.py). First you need to prepare your Home Connect Developer Account as described [here](https://api-docs.home-connect.com/quickstart/?#authorization). Check out this repository and make sure you have the library installed in your python environment (`pip install -e .`). Afterwards you can run the `simulator_events.py` file. It will ask you for the Client ID, insert the one for `API Web Client` from the Applications page in your developer dashboard. A login page will be opened in your browser that requires you to login to your Home Connect account and grant access. After your approval, it will forward you to the quickstart guide. From this page you need to copy the full URL (it includes the authorization code) and paste it to the console that is running the `simulator_events.py`. That's already it. In the Home Connect Dashboard you can switch to the "Simulators" tab, play with the devices and see the events coming in your python console.
+
+Note: In case the script fails with a message like "HomeAppliance is offline" make sure your devices in the simulator are marked as "Connected" and retry.
+
 ## Disclaimer
 
 The package and its author are not affiliated with BSH or Home Connect. Use at your own risk.
